@@ -1,239 +1,349 @@
-# Experiment 4: Aggregate Functions, Group By and Having Clause
+# Experiment 2: DDL Commands
 
 ## AIM
-To study and implement aggregate functions, GROUP BY, and HAVING clause with suitable examples.
+To study and implement DDL commands and different types of constraints.
 
 ## THEORY
 
-### Aggregate Functions
-These perform calculations on a set of values and return a single value.
-
-- **MIN()** – Smallest value  
-- **MAX()** – Largest value  
-- **COUNT()** – Number of rows  
-- **SUM()** – Total of values  
-- **AVG()** – Average of values
+### 1. CREATE
+Used to create a new relation (table).
 
 **Syntax:**
 ```sql
-SELECT AGG_FUNC(column_name) FROM table_name WHERE condition;
+CREATE TABLE (
+  field_1 data_type(size),
+  field_2 data_type(size),
+  ...
+);
 ```
-### GROUP BY
-Groups records with the same values in specified columns.
-**Syntax:**
+### 2. ALTER
+Used to add, modify, drop, or rename fields in an existing relation.
+(a) ADD
 ```sql
-SELECT column_name, AGG_FUNC(column_name)
-FROM table_name
-GROUP BY column_name;
+ALTER TABLE std ADD (Address CHAR(10));
 ```
-### HAVING
-Filters the grouped records based on aggregate conditions.
-**Syntax:**
+(b) MODIFY
 ```sql
-SELECT column_name, AGG_FUNC(column_name)
-FROM table_name
-GROUP BY column_name
-HAVING condition;
+ALTER TABLE relation_name MODIFY (field_1 new_data_type(size));
+```
+(c) DROP
+```sql
+ALTER TABLE relation_name DROP COLUMN field_name;
+```
+(d) RENAME
+```sql
+ALTER TABLE relation_name RENAME COLUMN old_field_name TO new_field_name;
+```
+### 3. DROP TABLE
+Used to permanently delete the structure and data of a table.
+```sql
+DROP TABLE relation_name;
+```
+### 4. RENAME
+Used to rename an existing database object.
+```sql
+RENAME TABLE old_relation_name TO new_relation_name;
+```
+### CONSTRAINTS
+Constraints are used to specify rules for the data in a table. If there is any violation between the constraint and the data action, the action is aborted by the constraint. It can be specified when the table is created (using CREATE TABLE) or after it is created (using ALTER TABLE).
+### 1. NOT NULL
+When a column is defined as NOT NULL, it becomes mandatory to enter a value in that column.
+Syntax:
+```sql
+CREATE TABLE Table_Name (
+  column_name data_type(size) NOT NULL
+);
+```
+### 2. UNIQUE
+Ensures that values in a column are unique.
+Syntax:
+```sql
+CREATE TABLE Table_Name (
+  column_name data_type(size) UNIQUE
+);
+```
+### 3. CHECK
+Specifies a condition that each row must satisfy.
+Syntax:
+```sql
+CREATE TABLE Table_Name (
+  column_name data_type(size) CHECK (logical_expression)
+);
+```
+### 4. PRIMARY KEY
+Used to uniquely identify each record in a table.
+Properties:
+Must contain unique values.
+Cannot be null.
+Should contain minimal fields.
+Syntax:
+```sql
+CREATE TABLE Table_Name (
+  column_name data_type(size) PRIMARY KEY
+);
+```
+### 5. FOREIGN KEY
+Used to reference the primary key of another table.
+Syntax:
+```sql
+CREATE TABLE Table_Name (
+  column_name data_type(size),
+  FOREIGN KEY (column_name) REFERENCES other_table(column)
+);
+```
+### 6. DEFAULT
+Used to insert a default value into a column if no value is specified.
+
+Syntax:
+```sql
+CREATE TABLE Table_Name (
+  col_name1 data_type,
+  col_name2 data_type,
+  col_name3 data_type DEFAULT 'default_value'
+);
 ```
 
 **Question 1**
 --
-How many medical records were created in each month?
+```
+Create a table named Employees with the following constraints:
 
-Sample table:MedicalRecords Table
+EmployeeID should be the primary key.
+FirstName and LastName should be NOT NULL.
+Email should be unique.
+Salary should be greater than 0.
+DepartmentID should be a foreign key referencing the Departments table.
 
+```
 ```sql
-SELECT 
-    strftime('%Y-%m', Date) AS Month,
-    COUNT(*) AS TotalRecords
-FROM MedicalRecords
-GROUP BY strftime('%Y-%m', Date)
-ORDER BY Month;
+CREATE TABLE Employees(
+EmployeeID INTEGER PRIMARY KEY,
+FirstName TEXT NOT NULL,
+LastName TEXT NOT NULL,
+Email TEXT UNIQUE,
+Salary REAL CHECK(Salary>0),
+DepartmentID INTEGER,
+FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
 ```
 
 **Output:**
-
-<img width="785" height="504" alt="image" src="https://github.com/user-attachments/assets/ea5eca81-8c13-4676-988e-49c52b508358" />
+<img width="1306" height="275" alt="image" src="https://github.com/user-attachments/assets/6d80bd0e-6d29-4fc2-adc9-d2d787279dde" />
 
 
 **Question 2**
 ---
-How many patients are covered by each insurance company?
-
-Sample table:Insurance Table
+```
+Create a table named ProjectAssignments with the following constraints:
+AssignmentID as INTEGER should be the primary key.
+EmployeeID as INTEGER should be a foreign key referencing Employees(EmployeeID).
+ProjectID as INTEGER should be a foreign key referencing Projects(ProjectID).
+AssignmentDate as DATE should be NOT NULL.
+```
 
 ```sql
-SELECT 
-    InsuranceCompany,
-    COUNT(DISTINCT PatientID) AS TotalPatients
-FROM Insurance
-GROUP BY InsuranceCompany
-ORDER BY InsuranceCompany;
+CREATE TABLE ProjectAssignments(
+AssignmentID INTEGER PRIMARY KEY,
+EmployeeID INTEGER ,
+ProjectID INTEGER,
+AssignmentDate DATE NOT NULL,
+FOREIGN KEY(employeeID) REFERENCES Employees (EmployeeID),
+FOREIGN KEY(ProjectID) REFERENCES Projects (ProjectID)
+
+);
 ```
 
 **Output:**
 
-<img width="824" height="754" alt="image" src="https://github.com/user-attachments/assets/ee7050f8-92c4-4e0a-9d82-1f6e1903c636" />
-
+<img width="1096" height="151" alt="image" src="https://github.com/user-attachments/assets/81dead55-4413-4137-a1c2-d41af3cb1341" />
 
 **Question 3**
 ---
-How many prescriptions were written for each medication?
+```
+Write a SQL query to Add a new column named "discount" with the data type DECIMAL(5,2) to the "customer" table.
 
-Sample tablePrescriptions Table
+Sample table: customer
 
+ customer_id |   cust_name    |    city    | grade | salesman_id 
+-------------+----------------+------------+-------+-------------
+        3002 | Nick Rimando   | New York   |   100 |        5001
+        3007 | Brad Davis     | New York   |   200 |        5001
+        3005 | Graham Zusi    | California |   200 |        5002
+```
 
 ```sql
-SELECT 
-    Medication,
-    COUNT(*) AS TotalPrescriptions
-FROM Prescriptions
-GROUP BY Medication
-ORDER BY Medication;
+ALTER TABLE customer
+ADD discount DECIMAL(5,2);
 ```
 
 **Output:**
 
-<img width="849" height="739" alt="image" src="https://github.com/user-attachments/assets/42359077-f61d-40a0-9912-3d6fa03aa340" />
+<img width="1763" height="297" alt="image" src="https://github.com/user-attachments/assets/633b1caa-630b-4c4d-a755-8447977dd762" />
 
 
 **Question 4**
 ---
-Write a SQL query to find how many employees have an income greater than 50K?
+```
+Insert all customers from Old_customers into Customers
 
-Table: employee
+Table attributes are CustomerID, Name, Address, Email
+```
 
 ```sql
-SELECT 
-    COUNT(*) AS employees_count
-FROM employee
-WHERE income > 50000;
+INSERT INTO customers(CustomerID, Name, Address, Email)
+SELECT CustomerID, Name, Address, Email
+FROM  Old_customers;
 ```
 
 **Output:**
 
-<img width="596" height="381" alt="image" src="https://github.com/user-attachments/assets/4195bf7a-5b5b-4754-ad1c-2a5af72b3687" />
-
+<img width="1852" height="355" alt="image" src="https://github.com/user-attachments/assets/f30c5ee8-b32d-4f2f-bd79-efe7aa3adc17" />
 
 
 **Question 5**
 ---
-Write a SQL query to calculate total available amount of fruits that has a price greater than 0.5 . Return total Count. 
-
-Note: Inventory attribute contains amount of fruits
-
-Table: fruits
+```
+Insert a record with EmployeeID 001, Name Sarah Parker, Position Manager, Department HR, and Salary 60000 into the Employee table.
+```
 
 ```sql
-SELECT 
-    SUM(inventory) AS total_available_amount
-FROM fruits
-WHERE price > 0.5;
+INSERT INTO Employee(EmployeeID,Name,Position,Department,Salary)
+VALUES(1,'Sarah Parker','Manager','HR',60000);
 ```
 
 **Output:**
 
-<img width="714" height="381" alt="image" src="https://github.com/user-attachments/assets/0eb3173d-a887-41d8-a6a4-07f28c48173a" />
+<img width="1755" height="261" alt="image" src="https://github.com/user-attachments/assets/dac2e375-a105-47d5-b064-1e83dd13cee1" />
 
 
 **Question 6**
 ---
-Write a SQL query to determine the number of customers who received at least one grade for their activity.
+```
+Create a table named Reviews with the following columns:
 
-Sample table: customer
+ReviewID as INTEGER
+ProductID as INTEGER
+Rating as REAL
+ReviewText as TEXT
+```
 
 ```sql
-SELECT 
-    COUNT(*) AS COUNT
-FROM customer
-WHERE grade IS NOT NULL;
+CREATE TABLE Reviews(
+ReviewID INTEGER,
+ProductID INTEGER,
+Rating REAL,
+ReviewText TEXT
+);
 ```
 
 **Output:**
 
-<img width="503" height="402" alt="image" src="https://github.com/user-attachments/assets/75303e5a-2e7b-449a-8c74-1bd1704e57aa" />
+<img width="1742" height="318" alt="image" src="https://github.com/user-attachments/assets/3ff29409-4d81-43a3-8366-2e18492c987b" />
+
 
 **Question 7**
 ---
-Write a SQL query to return the total number of rows in the 'customer' table where the city is Noida.
+```
+Insert the following students into the Student_details table:
+RollNo      Name        Gender      Subject     MARKS
+----------  ----------  ----------  ----------  ----------
+202            Ella King         F           Chemistry   87
+203            James Bond   M          Literature    78
 
-Sample table: customer
+ 
+```
 
 ```sql
-SELECT 
-    COUNT(*) AS COUNT
-FROM customer
-WHERE city = 'Noida';
+INSERT INTO  Student_details(RollNo,Name,Gender,Subject, MARKS)
+VALUES
+(202,'Ella King','F','Chemistry',87),
+(203,'James Bond','M','Literature',78);
+
 ```
 
 **Output:**
 
-<img width="389" height="371" alt="image" src="https://github.com/user-attachments/assets/5b793e25-f7e1-4f7c-a9ac-d0354ec32888" />
+<img width="1329" height="214" alt="image" src="https://github.com/user-attachments/assets/d74c8f1c-e41f-46dc-90eb-6d9e98cfe62a" />
 
 
 **Question 8**
 ---
-Write the SQL query that accomplishes the grouping of data by joining date (jdate), calculates the average work hours for each date, and excludes dates where the average work hour is not less than 10.
+```
+Write a SQL query to add birth_date attribute as timestamp (datatype) in the table customer 
 
-Sample table: employee1
+Sample table: customer
+
+ customer_id |   cust_name    |    city    | grade | salesman_id 
+-------------+----------------+------------+-------+-------------
+        3002 | Nick Rimando   | New York   |   100 |        5001
+        3007 | Brad Davis     | New York   |   200 |        5001
+        3005 | Graham Zusi    | California |   200 |        5002
+ 
+```
 
 ```sql
-SELECT 
-    jdate, 
-    AVG(workhour) AS "AVG(workhour)"
-FROM employee1
-GROUP BY jdate
-HAVING AVG(workhour) < 10;
+ALTER TABLE customer
+ADD birth_date timestamp;
 ```
 
 **Output:**
 
-<img width="650" height="418" alt="image" src="https://github.com/user-attachments/assets/ab400566-303c-4a7e-aa91-13a23fbf1ee0" />
+<img width="1865" height="294" alt="image" src="https://github.com/user-attachments/assets/0d88f964-3532-47e1-971f-a4d2a3f2465a" />
 
 
 **Question 9**
 ---
-Write the SQL query that accomplishes the grouping of data by age, calculates the total income for each age group, and includes only those age groups where the total income sum is greater than 1,000,000.
-
-Sample table: employee
-
-
-
+```
+Create a new table named products with the following specifications:
+product_id as INTEGER and primary key.
+product_name as TEXT and not NULL.
+list_price as DECIMAL (10, 2) and not NULL.
+discount as DECIMAL (10, 2) with a default value of 0 and not NULL.
+A CHECK constraint at the table level to ensure:
+list_price is greater than or equal to discount
+discount is greater than or equal to 0
+list_price is greater than or equal to 0
+```
 ```sql
-SELECT 
-    age, 
-    SUM(income) AS "SUM(income)"
-FROM employee
-GROUP BY age
-HAVING SUM(income) > 1000000;
+CREATE TABLE products(
+product_id INTEGER PRIMARY KEY,
+product_name TEXT NOT NULL,
+list_price DECIMAL(10,2) NOT NULL,
+discount DECIMAL(10,2) NOT NULL DEFAULT 0,
+CHECK (list_price>=discount),
+CHECK (discount>=0),
+CHECK (list_price>=0)
+);
+
 ```
 
 **Output:**
 
-<img width="716" height="475" alt="image" src="https://github.com/user-attachments/assets/c906b935-d685-4a36-8c0f-0b4248ff2cb8" />
-
+<img width="1895" height="228" alt="image" src="https://github.com/user-attachments/assets/51d65597-037e-443d-8d57-87a3cf5c562d" />
 
 
 **Question 10**
 ---
-Write the SQL query that achieves the grouping of data by occupation, calculates the total work hours for each occupation, and excludes occupations where the total work hour sum is not greater than 20.
-
-Sample table: employee1
+```
+Create a table named Department with the following constraints:
+DepartmentID as INTEGER should be the primary key.
+DepartmentName as TEXT should be unique and not NULL.
+Location as TEXT.
+```
 
 ```sql
-SELECT 
-    occupation, 
-    SUM(workhour) AS "SUM(workhour)"
-FROM employee1
-GROUP BY occupation
-HAVING SUM(workhour) > 20;
+CREATE TABLE Department(
+DepartmentID INTEGER PRIMARY KEY,
+DepartmentName TEXT UNIQUE NOT NULL,
+Location TEXT
+);
 ```
 
 **Output:**
 
-<img width="626" height="452" alt="image" src="https://github.com/user-attachments/assets/ed593055-ba3f-461f-bf82-1ad3a5cead64" />
+<img width="1636" height="142" alt="image" src="https://github.com/user-attachments/assets/cb734d58-badf-4fef-9f09-d258c777ed07" />
 
 
 
 ## RESULT
-Thus, the SQL queries to implement aggregate functions, GROUP BY, and HAVING clause have been executed successfully.
+Thus, the SQL queries to implement different types of constraints and DDL commands have been executed successfully.
